@@ -4,7 +4,6 @@ import com.zhw.demo.quartz.TaskProperties;
 import com.zhw.demo.quartz.BaseJob;
 import com.zhw.demo.quartz.JobTriggerInfo;
 import com.zhw.demo.quartz.QuartzService;
-import com.zhw.demo.quartz.SpringUtil;
 import org.quartz.SchedulerException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
@@ -35,12 +34,8 @@ public class JobTriggerService {
     }
 
     public boolean addJobAndTrigger(String name, String cronExpression, String description) throws SchedulerException, ParseException {
-        if (SpringUtil.containsBean(name)) {
-            jobService.deleteJobAndTrigger(taskProperties.getTriggerGroup(), taskProperties.getJobGroup(), name);
-            return jobService.addJobAndTrigger(taskProperties.getTriggerGroup(), taskProperties.getJobGroup(), name, cronExpression, description);
-        }
-
-        return false;
+        jobService.deleteJobAndTrigger(taskProperties.getTriggerGroup(), taskProperties.getJobGroup(), name);
+        return jobService.addJobAndTrigger(taskProperties.getTriggerGroup(), taskProperties.getJobGroup(), name, cronExpression, description);
     }
 
     /**
@@ -50,8 +45,7 @@ public class JobTriggerService {
      */
     @Async
     public void execJob(String name) {
-        BaseJob job = (BaseJob) SpringUtil.getBean(name);
-        job.execute();
+        jobService.execJob(name);
     }
 
 }

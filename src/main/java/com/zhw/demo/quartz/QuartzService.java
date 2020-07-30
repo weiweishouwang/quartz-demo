@@ -6,7 +6,10 @@ import org.quartz.impl.matchers.GroupMatcher;
 import org.quartz.impl.triggers.CronTriggerImpl;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -19,9 +22,16 @@ import java.util.*;
  * 有关Quartz Job Trigger 的操作
  */
 @Service
-public class QuartzService {
+public class QuartzService implements ApplicationContextAware {
     @Autowired
     private Scheduler scheduler;
+
+    private ApplicationContext applicationContext;
+
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        this.applicationContext = applicationContext;
+    }
 
     /**
      * 增加jobs
@@ -30,8 +40,8 @@ public class QuartzService {
      * @throws SchedulerException
      */
     public void addJob(JobDetailImpl quartzJob) throws SchedulerException {
-        JobDetail jobDetail = JobBuilder.newJob().ofType(JobAdapter.class)
-                .usingJobData("serviceName", quartzJob.getName())
+        JobDetail jobDetail = JobBuilder.newJob((Class<? extends Job>) applicationContext.getType(quartzJob.getName()))//.ofType(JobAdapter.class)
+                //.usingJobData("serviceName", quartzJob.getName())
                 .withDescription(quartzJob.getDescription())
                 .withIdentity(quartzJob.getName(), quartzJob.getGroup()).storeDurably().build();
         scheduler.addJob(jobDetail, true);
@@ -205,9 +215,7 @@ public class QuartzService {
 
     public boolean addJobAndTrigger(String triggerGroup, String jobGroup, String name, String cronExpression, String description)
             throws SchedulerException, ParseException {
-        if (SpringUtil.containsBean(name)) {
-            deleteJobAndTrigger(triggerGroup, jobGroup, name);
-
+        if (applicationContext.containsBean(name)) {
             JobDetailImpl quartzJob = new JobDetailImpl();
             quartzJob.setGroup(jobGroup);
             quartzJob.setName(StringUtils.uncapitalize(name));
@@ -257,5 +265,10 @@ public class QuartzService {
         }
 
         return jobTriggerInfos;
+    }
+
+    public void execJob(String name) {
+        BaseJob job = (BaseJob) applicationContext.getBean(name);
+        job.execute();
     }
 }
