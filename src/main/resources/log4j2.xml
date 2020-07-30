@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<Configuration status="WARN">
+    <Properties>
+        <Property name="basePath">/var/sc/log</Property>
+        <Property name="server">${basePath}/zuul</Property>
+    </Properties>
+
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT" follow="true">
+            <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss,SSS}] [%t] [%-5level] [%class{36}] [%L] [%M] [%msg%xEx]%n"/>
+        </Console>
+
+    </Appenders>
+    <Loggers>
+
+        <Root level="info">
+            <AppenderRef ref="Console" level="info"/>
+        </Root>
+
+    </Loggers>
+
+</Configuration>
